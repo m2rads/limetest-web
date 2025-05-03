@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { IconCopy, IconCheck, IconLemon } from "@tabler/icons-react";
+import { IconCopy, IconCheck, IconLemon, IconBrandGithub } from "@tabler/icons-react";
+import Link from "next/link";
 
 export default function Home() {
   const [copied, setCopied] = useState(false);
@@ -33,25 +34,93 @@ export default function Home() {
         <div className="absolute inset-0 bg-dots-pattern opacity-10 dark:opacity-5"></div>
       </div>
 
-      {/* Header */}
-      <header className="flex justify-end p-6 relative z-10">
-        <ThemeToggle />
+      {/* Header with Navigation Bar */}
+      <header className="py-4 px-6 relative z-10">
+        <nav className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Left - Logo and Text */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="bg-gradient-to-br from-lime-500/30 to-lime-300/20 dark:from-lime-500/20 dark:to-lime-400/10 
+                w-8 h-8 rounded-lg flex items-center justify-center relative overflow-hidden backdrop-blur-sm">
+                <IconLemon 
+                  size={20} 
+                  className="text-lime-600 dark:text-lime-400 transition-transform duration-300 group-hover:rotate-12" 
+                  stroke={1.5} 
+                />
+              </div>
+              <span className="font-bold text-lg text-foreground">limetest</span>
+            </Link>
+          </div>
+          
+          {/* Middle - Navigation Links */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link 
+              href="/product" 
+              className="text-foreground/80 hover:text-lime-500 dark:hover:text-lime-400 transition-colors"
+            >
+              Product
+            </Link>
+            <Link 
+              href="/docs" 
+              className="text-foreground/80 hover:text-lime-500 dark:hover:text-lime-400 transition-colors"
+            >
+              Docs
+            </Link>
+          </div>
+          
+          {/* Right - GitHub and Get Started */}
+          <div className="flex items-center space-x-4">
+            <Link 
+              href="https://github.com/lime-test/limetest" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-foreground/70 hover:text-foreground transition-colors"
+              aria-label="GitHub Repository"
+            >
+              <IconBrandGithub size={20} />
+            </Link>
+            <Link 
+              href="/get-started" 
+              className="bg-lime-500 hover:bg-lime-600 dark:bg-lime-600 dark:hover:bg-lime-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
+            >
+              Get Started
+            </Link>
+            <ThemeToggle />
+          </div>
+        </nav>
       </header>
 
       {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 text-center relative z-10">
+        {/* NPM Install (moved from below and made smaller) */}
         <div 
-          className={`mb-8 bg-gradient-to-br from-lime-500/30 to-lime-300/20 dark:from-lime-500/20 dark:to-lime-400/10 
-          w-24 h-24 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden backdrop-blur-sm
+          className={`mb-8 w-full max-w-sm
           transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
         >
-          <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
-          <div className="absolute inset-0 bg-lime-400/10 mix-blend-overlay"></div>
-          <IconLemon 
-            size={48} 
-            className="text-lime-600 dark:text-lime-400 transition-transform duration-300 hover:rotate-12 drop-shadow-sm" 
-            stroke={1.5} 
-          />
+          <div 
+            onClick={handleCopy}
+            className="bg-foreground/5 dark:bg-foreground/10 border border-foreground/10 rounded-lg p-3 font-mono text-xs sm:text-sm cursor-pointer relative group overflow-hidden flex items-center hover:shadow-md transition-all duration-300 backdrop-blur-sm"
+          >
+            <div className="mr-2 text-lime-500 dark:text-lime-400">$</div>
+            <code>npm install @limetest/limetest</code>
+            
+            <div 
+              className={`absolute right-3 flex items-center justify-center transition-all duration-300 ease-in-out ${copied ? 'scale-110' : 'scale-100'}`}
+            >
+              {copied ? (
+                <IconCheck size={16} className="text-lime-500 dark:text-lime-400" stroke={2} />
+              ) : (
+                <IconCopy size={16} className="text-foreground/50 group-hover:text-foreground/80" stroke={1.5} />
+              )}
+            </div>
+            
+            <div className={`absolute inset-0 bg-lime-500/5 transform origin-left transition-transform duration-500 ease-in-out ${copied ? 'scale-x-100' : 'scale-x-0'}`}></div>
+            <div className="absolute bottom-0 left-0 h-0.5 bg-lime-500 dark:bg-lime-400 w-0 group-hover:w-full transition-all duration-300"></div>
+          </div>
+          
+          <div className={`mt-1 text-xs text-center transition-opacity duration-300 ${copied ? 'opacity-100' : 'opacity-0'}`}>
+            Copied to clipboard!
+          </div>
         </div>
         
         <h1 
@@ -84,34 +153,16 @@ export default function Home() {
           would interact with your app.
         </p>
         
+        {/* Get Started CTA Button */}
         <div 
-          className={`w-full max-w-md
-          transition-all duration-700 delay-450 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
+          className={`transition-all duration-700 delay-450 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
         >
-          <div 
-            onClick={handleCopy}
-            className="bg-foreground/5 dark:bg-foreground/10 border border-foreground/10 rounded-xl p-4 font-mono text-sm sm:text-base cursor-pointer relative group overflow-hidden flex items-center hover:shadow-md transition-all duration-300 backdrop-blur-sm"
+          <Link 
+            href="/get-started" 
+            className="bg-lime-500 hover:bg-lime-600 dark:bg-lime-600 dark:hover:bg-lime-700 text-white px-8 py-3 rounded-lg transition-colors shadow-md text-lg font-medium"
           >
-            <div className="mr-2 text-lime-500 dark:text-lime-400">$</div>
-            <code>npm install @limetest/limetest</code>
-            
-            <div 
-              className={`absolute right-4 flex items-center justify-center transition-all duration-300 ease-in-out ${copied ? 'scale-110' : 'scale-100'}`}
-            >
-              {copied ? (
-                <IconCheck size={18} className="text-lime-500 dark:text-lime-400" stroke={2} />
-              ) : (
-                <IconCopy size={18} className="text-foreground/50 group-hover:text-foreground/80" stroke={1.5} />
-              )}
-            </div>
-            
-            <div className={`absolute inset-0 bg-lime-500/5 transform origin-left transition-transform duration-500 ease-in-out ${copied ? 'scale-x-100' : 'scale-x-0'}`}></div>
-            <div className="absolute bottom-0 left-0 h-0.5 bg-lime-500 dark:bg-lime-400 w-0 group-hover:w-full transition-all duration-300"></div>
-          </div>
-          
-          <div className={`mt-2 text-xs text-center transition-opacity duration-300 ${copied ? 'opacity-100' : 'opacity-0'}`}>
-            Copied to clipboard!
-          </div>
+            Get Started
+          </Link>
         </div>
       </main>
 
