@@ -64,7 +64,7 @@ export default function AuthCallbackPage() {
     <div className="flex min-h-svh w-full items-center justify-center bg-gradient-radial-subtle">
       <div className="p-8 text-center">
         <h1 className="text-xl font-semibold text-foreground mb-2">
-          Authenticating...
+          {isLoading ? "Authenticating..." : "Redirecting..."}
         </h1>
         <p className="text-muted-foreground mb-6">
           Please wait while we redirect you.
@@ -72,7 +72,7 @@ export default function AuthCallbackPage() {
         
         {/* Loading Spinner */}
         <div className="flex justify-center">
-          <div className="relative h-12 w-12">
+          <div className={`relative h-12 w-12 ${!isLoading ? "opacity-50" : ""}`}>
             <div className="absolute inset-0 rounded-full border-4 border-foreground/10"></div>
             <div className="absolute inset-0 rounded-full border-4 border-t-lime-500 animate-spin"></div>
           </div>
