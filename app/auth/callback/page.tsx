@@ -13,25 +13,19 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function handleCallback() {
       try {
-        // Check if we have a session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();        
         if (sessionError) throw sessionError;
         
         if (session) {
-          // If we have a session, redirect to dashboard
           router.push("/dashboard");
         } else {
-          // No session yet, let's explicitly exchange the code for a session
           const { data, error: exchangeError } = await supabase.auth.getUser();
           
           if (exchangeError) throw exchangeError;
           
           if (data.user) {
-            // User authenticated successfully, redirect
             router.push("/dashboard");
           } else {
-            // Still no user after checking, something is wrong
             setError("Authentication failed. Please try again.");
             setIsLoading(false);
           }
@@ -42,8 +36,6 @@ export default function AuthCallbackPage() {
         setIsLoading(false);
       }
     }
-
-    // Run the auth callback handler
     handleCallback();
   }, [router, supabase]);
 
