@@ -1,36 +1,68 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
+### Supabase Setup
+
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+
+2. Add environment variables to `.env.local`:
+
 
 First, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### GitHub App Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a GitHub App at github.com/settings/apps/new with these permissions:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Actions: Read-only
+- Checks: Read-only  
+- Workflows: Read & write
+- Contents: Read-only
+- Metadata: Read-only
 
-## Learn More
+2. Subscribe to these webhook events:
 
-To learn more about Next.js, take a look at the following resources:
+Required:
+- Workflow job
+- Workflow run  
+- Check run
+- Workflow dispatch
+- Repository dispatch
+- Meta
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Generate a webhook secret:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# On macOS/Linux
+openssl rand -hex 32
 
-## Deploy on Vercel
+# On Windows with PowerShell
+[Convert]::ToHexString((1..32 | ForEach-Object { [byte](Get-Random -Minimum 0 -Maximum 256) }))
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. Add the generated secret to your GitHub App:
+   - In the "Webhook" section of your GitHub App settings
+   - Paste the generated secret into the "Webhook Secret" field
+   - Save changes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Add the same secret to your `.env.local` file:
+
+```
+GITHUB_WEBHOOK_SECRET=your_generated_secret
+```
+
+6. Set the Webhook URL in GitHub to:
+
+```
+https://your-domain.com/api/github/webhook
+```
+
+For local development, you can use a tool like [ngrok](https://ngrok.com/) to expose your local server to the internet or deploy to Vercel:
+
+```bash
+ngrok http 3000
+```
