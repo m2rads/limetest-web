@@ -1,6 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Simple in-memory cache to prevent too many refresh attempts
+// Note: This is per-server-instance. For multi-instance deployments,
+// consider using a distributed cache like Redis
+const lastRefreshAttempt = {
+  timestamp: 0,
+  cooldownMs: 60 * 1000 // Only try refresh once per minute
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -27,40 +35,53 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  // IMPORTANT: Verify the session is valid and not expired
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-  // IMPORTANT: DO NOT REMOVE auth.getUser()
+    // If we have a session, validate it but with throttling
+    if (session) {
+      const now = Date.now()
+      
+      // Only attempt to refresh the session once per minute to avoid rate limiting
+      if (now - lastRefreshAttempt.timestamp > lastRefreshAttempt.cooldownMs) {
+        lastRefreshAttempt.timestamp = now
+        
+        // This will fail if the GitHub access has been revoked
+        const { error } = await supabase.auth.refreshSession()
+        
+        if (error) {
+          console.error('Session refresh failed:', error.message)
+          // Session is invalid - redirect to login
+          const url = request.nextUrl.clone()
+          url.pathname = '/auth/login'
+          return NextResponse.redirect(url)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error verifying session:', error)
+  }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  // No user session found or error occurred
   if (
-    !user &&
     request.nextUrl.pathname !== '/' &&
     !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/auth')
   ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
-    return NextResponse.redirect(url)
-  }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
+    if (!user) {
+      // no user, redirect to the login page
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      return NextResponse.redirect(url)
+    }
+  }
 
   return supabaseResponse
 }
