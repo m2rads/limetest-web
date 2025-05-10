@@ -61,12 +61,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     email: "",
     avatar: ""
   })
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     async function fetchUserData() {
       try {
-        setIsLoading(true)
         const supabase = createClient()
         
         // Get the user from Supabase auth
@@ -107,8 +105,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       } catch (error) {
         console.error("Error fetching user data:", error)
         // Keep the loading placeholder on error
-      } finally {
-        setIsLoading(false)
       }
     }
     
