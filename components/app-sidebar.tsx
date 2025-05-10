@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useState, useEffect } from "react"
 import {
   IconChartBar,
   IconDashboard,
@@ -12,6 +13,7 @@ import {
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
+import { createClient } from "@/lib/supabase/client"
 import {
   Sidebar,
   SidebarContent,
@@ -22,12 +24,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
+// Default data as fallback
+const defaultData = {
   navMain: [
     {
       title: "Performance",
@@ -58,6 +56,65 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [userData, setUserData] = useState({
+    name: "Loading...",
+    email: "",
+    avatar: ""
+  })
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        setIsLoading(true)
+        const supabase = createClient()
+        
+        // Get the user from Supabase auth
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) {
+          setUserData({
+            name: "Guest",
+            email: "",
+            avatar: ""
+          })
+          return
+        }
+        
+        // First try the profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, full_name, avatar_url')
+          .eq('id', user.id)
+          .single()
+        
+        if (profile) {
+          setUserData({
+            name: profile.full_name || profile.username || user.email?.split('@')[0] || 'User',
+            email: user.email || '',
+            avatar: profile.avatar_url || ''
+          })
+        } else {
+          // Fall back to user metadata from auth
+          const metadata = user.user_metadata || {}
+          
+          setUserData({
+            name: metadata.name || metadata.user_name || metadata.login || user.email?.split('@')[0] || 'User',
+            email: user.email || '',
+            avatar: metadata.avatar_url || ''
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error)
+        // Keep the loading placeholder on error
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchUserData()
+  }, [])
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -80,10 +137,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={defaultData.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>
   )
