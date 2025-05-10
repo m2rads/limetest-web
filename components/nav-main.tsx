@@ -1,9 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { IconBrandGithub, IconChevronDown, IconLeaf, IconMail, IconUser, type Icon } from "@tabler/icons-react"
+import { IconBrandGithub, IconChevronDown, IconLeaf, IconUser, type Icon } from "@tabler/icons-react"
 
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
