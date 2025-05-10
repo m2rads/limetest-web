@@ -73,7 +73,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className="text-lime-600 dark:text-lime-400 transition-transform duration-300 group-hover:rotate-12" 
                   stroke={1.5} 
                 />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <span className="text-base font-semibold">Limetest</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
