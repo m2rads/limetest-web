@@ -1,116 +1,55 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
 import {
+  IconLemon,
   IconChartBar,
   IconDashboard,
-  IconLemon,
   IconActivity,
   IconReport,
   IconSettings,
+  type Icon
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { createClient } from "@/lib/supabase/client"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuButton,
 } from "@/components/ui/sidebar"
 
-// Default data as fallback
-const defaultData = {
-  navMain: [
-    {
-      title: "Performance",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Quality",
-      url: "#",
-      icon: IconActivity,
-    },
-    {
-      title: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      title: "Billing",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    }
-  ]
+export type UserData = {
+  name: string
+  email: string
+  avatar: string
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [userData, setUserData] = useState({
-    name: "Loading...",
-    email: "",
-    avatar: ""
-  })
+export type NavItem = {
+  title: string
+  url: string
+  icon: string  // Icon name as a string
+}
 
-  useEffect(() => {
-    async function fetchUserData() {
-      try {
-        const supabase = createClient()
-        
-        // Get the user from Supabase auth
-        const { data: { user } } = await supabase.auth.getUser()
-        
-        if (!user) {
-          setUserData({
-            name: "Guest",
-            email: "",
-            avatar: ""
-          })
-          return
-        }
-        
-        // First try the profiles table
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username, full_name, avatar_url')
-          .eq('id', user.id)
-          .single()
-        
-        if (profile) {
-          setUserData({
-            name: profile.full_name || profile.username || user.email?.split('@')[0] || 'User',
-            email: user.email || '',
-            avatar: profile.avatar_url || ''
-          })
-        } else {
-          // Fall back to user metadata from auth
-          const metadata = user.user_metadata || {}
-          
-          setUserData({
-            name: metadata.name || metadata.user_name || metadata.login || user.email?.split('@')[0] || 'User',
-            email: user.email || '',
-            avatar: metadata.avatar_url || ''
-          })
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error)
-        // Keep the loading placeholder on error
-      }
-    }
-    
-    fetchUserData()
-  }, [])
+// Map of icon names to icon components
+export const iconMap: Record<string, Icon> = {
+  dashboard: IconDashboard,
+  activity: IconActivity,
+  report: IconReport,
+  chartBar: IconChartBar,
+  settings: IconSettings,
+}
 
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  userData: UserData
+  navItems: NavItem[]
+}
+
+export function AppSidebar({ userData, navItems, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -133,7 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={defaultData.navMain} />
+        <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />

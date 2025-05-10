@@ -1,4 +1,4 @@
-import { AppSidebar } from "@/components/app-sidebar"
+import { AppSidebarContainer } from "@/components/app-sidebar-container"
 import { SiteHeader } from "@/components/site-header"
 import {
   SidebarInset,
@@ -15,7 +15,7 @@ export default function Page() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <AppSidebarContainer variant="inset" />
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">

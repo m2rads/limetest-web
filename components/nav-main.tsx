@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { IconBrandGithub, IconChevronDown, IconLeaf, IconUser, type Icon } from "@tabler/icons-react"
+import { IconBrandGithub, IconChevronDown, IconLeaf, IconUser } from "@tabler/icons-react"
+import { iconMap } from "./app-sidebar"
 
 import {
   DropdownMenu,
@@ -18,7 +19,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Mock data for organizations
+// TODO: Get organizations from Supabase
 const organizations = [
   { id: 1, name: "lime-test", icon: IconLeaf },
   { id: 2, name: "m2rads", icon: IconUser },
@@ -30,7 +31,7 @@ export function NavMain({
   items: {
     title: string
     url: string
-    icon?: Icon
+    icon: string
   }[]
 }) {
   const [currentOrg, setCurrentOrg] = useState(organizations[0])
@@ -74,14 +75,17 @@ export function NavMain({
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map((item) => {
+            const Icon = item.icon ? iconMap[item.icon] : null;
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton tooltip={item.title}>
+                  {Icon && <Icon />}
+                  <span>{item.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
