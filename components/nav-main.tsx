@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useCallback, useMemo } from "react"
 import { IconBrandGithub, IconChevronDown } from "@tabler/icons-react"
 import { iconMap } from "./app-sidebar"
 import { redirectToGitHubAppInstall, setActiveOrganization } from '@/lib/github/actions'
@@ -42,19 +42,23 @@ export function NavMain({
   organizations: Organization[];
 }) {
   // Find the active organization or default to the first one
-  const activeOrg = organizations.find(org => org.is_active) || organizations[0]
+  const activeOrg = useMemo(() => 
+    organizations.find(org => org.is_active) || organizations[0],
+    [organizations]
+  )
+  
   const [currentOrg, setCurrentOrg] = useState(activeOrg || null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const pathname = usePathname()
 
-  function handleAddOrg() {
+  const handleAddOrg = useCallback(() => {
     startTransition(() => {
       redirectToGitHubAppInstall()
     })
-  }
+  }, [])
 
-  async function handleSelectOrg(org: Organization) {
+  const handleSelectOrg = useCallback(async (org: Organization) => {
     if (org.id === currentOrg?.id) return
 
     startTransition(async () => {
@@ -74,7 +78,18 @@ export function NavMain({
         console.error('Failed to update active organization:', error)
       }
     })
-  }
+  }, [currentOrg, router])
+
+  // Prefetch nav item routes for faster navigation
+  useMemo(() => {
+    if (typeof window !== 'undefined') {
+      items.forEach(item => {
+        if (item.url && item.url !== '#') {
+          router.prefetch(item.url)
+        }
+      })
+    }
+  }, [items, router])
 
   return (
     <SidebarGroup>
@@ -97,6 +112,7 @@ export function NavMain({
                             fill
                             sizes="20px"
                             className="object-cover"
+                            priority
                           />
                         </div>
                       ) : (
@@ -125,6 +141,7 @@ export function NavMain({
                               fill
                               sizes="20px"
                               className="object-cover"
+                              loading="eager"
                             />
                           </div>
                         ) : (
@@ -165,7 +182,12 @@ export function NavMain({
             
             return (
               <SidebarMenuItem key={item.title}>
-                <Link href={item.url !== '#' ? item.url : '#'} className="w-full">
+                <Link 
+                  href={item.url !== '#' ? item.url : '#'} 
+                  className="w-full" 
+                  prefetch={true}
+                  replace={false}
+                >
                   <SidebarMenuButton 
                     tooltip={item.title}
                     className={isActive ? "bg-accent/70 text-accent-foreground" : ""}
