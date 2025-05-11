@@ -5,6 +5,7 @@ import { IconBrandGithub, IconChevronDown } from "@tabler/icons-react"
 import { iconMap } from "./app-sidebar"
 import { redirectToGitHubAppInstall, setActiveOrganization } from '@/lib/github/actions'
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 import {
   DropdownMenu,
@@ -87,11 +88,15 @@ export function NavMain({
                   >
                     <div className="flex items-center gap-2">
                       {currentOrg?.avatar_url ? (
-                        <img 
-                          src={currentOrg.avatar_url} 
-                          alt={currentOrg.name} 
-                          className="w-5 h-5 rounded-full" 
-                        />
+                        <div className="relative w-5 h-5 rounded-full overflow-hidden">
+                          <Image 
+                            src={currentOrg.avatar_url} 
+                            alt={currentOrg.name} 
+                            fill
+                            sizes="20px"
+                            className="object-cover"
+                          />
+                        </div>
                       ) : (
                         <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
                           {currentOrg?.name?.charAt(0) || '?'}
@@ -111,11 +116,15 @@ export function NavMain({
                     >
                       <div className="flex items-center gap-2">
                         {org.avatar_url ? (
-                          <img 
-                            src={org.avatar_url} 
-                            alt={org.name} 
-                            className="w-5 h-5 rounded-full" 
-                          />
+                          <div className="relative w-5 h-5 rounded-full overflow-hidden">
+                            <Image 
+                              src={org.avatar_url} 
+                              alt={org.name}
+                              fill
+                              sizes="20px"
+                              className="object-cover"
+                            />
+                          </div>
                         ) : (
                           <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
                             {org.name.charAt(0)}

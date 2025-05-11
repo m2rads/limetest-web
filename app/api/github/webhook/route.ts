@@ -23,6 +23,18 @@ function verifyGitHubWebhook(payload: string, signature: string): boolean {
   }
 }
 
+// Define a type for the webhook body to avoid using 'any'
+interface WebhookBody {
+  action?: string;
+  installation?: {
+    id: number;
+  };
+  repository?: {
+    full_name: string;
+  };
+  [key: string]: unknown;
+}
+
 export async function POST(request: Request) {
   console.log('GitHub webhook received!', new Date().toISOString());
   
@@ -41,13 +53,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
     
-    let body: any = {};
-    let githubEvent = request.headers.get('x-github-event');
+    let body: WebhookBody = {};
+    const githubEvent = request.headers.get('x-github-event');
     
     try {
-      body = JSON.parse(payload);
+      body = JSON.parse(payload) as WebhookBody;
       console.log(`✅ Webhook verified: ${githubEvent}, action: ${body.action || 'none'}`);
-    } catch (parseError) {
+    } catch {
       console.error('❌ Error parsing webhook payload');
       return NextResponse.json({ error: 'Invalid payload format' }, { status: 400 });
     }
@@ -55,27 +67,30 @@ export async function POST(request: Request) {
     switch (githubEvent) {
       case 'installation':        
         if (body.action === 'deleted') {
-          const installationId = body.installation.id.toString();
+          const installationId = body.installation?.id.toString();
+          if (!installationId) {
+            console.error('❌ Missing installation ID in webhook payload');
+            return NextResponse.json({ error: 'Invalid payload format' }, { status: 400 });
+          }
+          
           console.log(`🗑️ GitHub App uninstalled from installation ${installationId}`);
           
           try {
             const supabase = await createClient();
             
-            const { data: affectedRows, error } = await supabase.rpc(
+            const { data: affectedRows } = await supabase.rpc(
               'delete_github_connection',
               { p_installation_id: installationId }
             );
             
-            if (error) {
-              console.error('❌ Error calling delete_github_connection');
-            } else {
+            if (affectedRows) {
               console.log(`✅ Installation ${installationId} uninstalled successfully`);
               if (affectedRows.updated > 0) {
                 console.log(`   New active connection set for user`);
               }
               revalidatePath('/dashboard');
             }
-          } catch (error) {
+          } catch {
             console.error('❌ Error processing uninstallation');
           }
         }
@@ -91,7 +106,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     console.error('Error processing webhook');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
