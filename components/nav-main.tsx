@@ -102,7 +102,7 @@ export function NavMain({
                     <IconChevronDown className="h-4 w-4 opacity-70" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-52">
+                <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg">
                   {organizations.map((org) => (
                     <DropdownMenuItem 
                       key={org.id} 
