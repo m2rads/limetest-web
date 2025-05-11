@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { IconBrandGithub, IconChevronDown, IconLeaf, IconUser } from "@tabler/icons-react"
+import { useState, useTransition } from "react"
+import { IconBrandGithub, IconChevronDown } from "@tabler/icons-react"
 import { iconMap } from "./app-sidebar"
+import { redirectToGitHubAppInstall, setActiveOrganization } from '@/lib/github/actions'
+import { useRouter } from "next/navigation"
 
 import {
   DropdownMenu,
@@ -19,59 +21,129 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// TODO: Get organizations from Supabase
-const organizations = [
-  { id: 1, name: "lime-test", icon: IconLeaf },
-  { id: 2, name: "m2rads", icon: IconUser },
-]
+export type Organization = {
+  id: string | number;
+  name: string;
+  avatar_url?: string;
+  is_active?: boolean;
+}
 
 export function NavMain({
   items,
+  organizations = [],
 }: {
   items: {
     title: string
     url: string
     icon: string
-  }[]
+  }[];
+  organizations: Organization[];
 }) {
-  const [currentOrg, setCurrentOrg] = useState(organizations[0])
+  // Find the active organization or default to the first one
+  const activeOrg = organizations.find(org => org.is_active) || organizations[0]
+  const [currentOrg, setCurrentOrg] = useState(activeOrg || null)
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  function handleAddOrg() {
+    startTransition(() => {
+      redirectToGitHubAppInstall()
+    })
+  }
+
+  async function handleSelectOrg(org: Organization) {
+    if (org.id === currentOrg?.id) return
+
+    startTransition(async () => {
+      try {
+        setCurrentOrg(org)
+        
+        if (typeof org.id === 'string') {
+          const result = await setActiveOrganization(org.id)
+          
+          if (result.success) {
+            router.refresh()
+          } else {
+            console.error('Failed to update active organization:', result.error)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to update active organization:', error)
+      }
+    })
+  }
 
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  tooltip="Select organization"
-                  className="bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground active:bg-accent/90 active:text-accent-foreground min-w-8 duration-200 ease-linear justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    {currentOrg.icon && <currentOrg.icon className="text-green-500" />}
-                    <span>{currentOrg.name}</span>
-                  </div>
-                  <IconChevronDown className="h-4 w-4 opacity-70" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-52">
-                {organizations.map((org) => (
-                  <DropdownMenuItem key={org.id} onClick={() => setCurrentOrg(org)}>
+            {organizations.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    tooltip="Select organization"
+                    className="bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground active:bg-accent/90 active:text-accent-foreground min-w-8 duration-200 ease-linear justify-between"
+                  >
                     <div className="flex items-center gap-2">
-                      {org.icon && <org.icon className={org.name === "lime-test" ? "text-green-500" : "text-primary"} />}
-                      <span>{org.name}</span>
+                      {currentOrg?.avatar_url ? (
+                        <img 
+                          src={currentOrg.avatar_url} 
+                          alt={currentOrg.name} 
+                          className="w-5 h-5 rounded-full" 
+                        />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+                          {currentOrg?.name?.charAt(0) || '?'}
+                        </div>
+                      )}
+                      <span>{currentOrg?.name}</span>
+                    </div>
+                    <IconChevronDown className="h-4 w-4 opacity-70" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52">
+                  {organizations.map((org) => (
+                    <DropdownMenuItem 
+                      key={org.id} 
+                      onClick={() => handleSelectOrg(org)}
+                      className={org.is_active ? "bg-accent/50" : ""}
+                    >
+                      <div className="flex items-center gap-2">
+                        {org.avatar_url ? (
+                          <img 
+                            src={org.avatar_url} 
+                            alt={org.name} 
+                            className="w-5 h-5 rounded-full" 
+                          />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+                            {org.name.charAt(0)}
+                          </div>
+                        )}
+                        <span>{org.name}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleAddOrg} disabled={isPending}>
+                    <div className="flex items-center gap-2">
+                      <IconBrandGithub />
+                      <span>{isPending ? 'Redirecting...' : 'Add an organization'}</span>
                     </div>
                   </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <div className="flex items-center gap-2">
-                    <IconBrandGithub />
-                    <span>Add an organization</span>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <SidebarMenuButton
+                tooltip="Add GitHub organization"
+                onClick={handleAddOrg}
+                disabled={isPending}
+              >
+                <IconBrandGithub />
+                <span>{isPending ? 'Redirecting...' : 'Connect GitHub organization'}</span>
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
