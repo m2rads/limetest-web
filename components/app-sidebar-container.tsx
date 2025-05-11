@@ -15,17 +15,17 @@ const defaultNavItems: NavItem[] = [
   // },
   {
     title: "Reports",
-    url: "#",
+    url: "/reports",
     icon: "report",
   },
   {
     title: "Billing",
-    url: "#",
+    url: "/billing",
     icon: "chartBar",
   },
   {
     title: "Settings",
-    url: "#",
+    url: "/settings",
     icon: "settings",
   }
 ]

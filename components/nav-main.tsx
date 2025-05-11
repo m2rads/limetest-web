@@ -4,8 +4,9 @@ import { useState, useTransition } from "react"
 import { IconBrandGithub, IconChevronDown } from "@tabler/icons-react"
 import { iconMap } from "./app-sidebar"
 import { redirectToGitHubAppInstall, setActiveOrganization } from '@/lib/github/actions'
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 
 import {
   DropdownMenu,
@@ -45,6 +46,7 @@ export function NavMain({
   const [currentOrg, setCurrentOrg] = useState(activeOrg || null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const pathname = usePathname()
 
   function handleAddOrg() {
     startTransition(() => {
@@ -158,12 +160,20 @@ export function NavMain({
         <SidebarMenu>
           {items.map((item) => {
             const Icon = item.icon ? iconMap[item.icon] : null;
+            const isActive = pathname === item.url || 
+                            (item.url !== '/' && item.url !== '#' && pathname?.startsWith(item.url));
+            
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton tooltip={item.title}>
-                  {Icon && <Icon />}
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
+                <Link href={item.url !== '#' ? item.url : '#'} className="w-full">
+                  <SidebarMenuButton 
+                    tooltip={item.title}
+                    className={isActive ? "bg-accent/70 text-accent-foreground" : ""}
+                  >
+                    {Icon && <Icon />}
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             );
           })}
