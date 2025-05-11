@@ -1,13 +1,10 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
-// This secret should match what you set in the GitHub App settings
 const WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET
 
-/**
- * Verify that the webhook request is coming from GitHub by
- * checking the X-Hub-Signature-256 header
- */
 function verifyGitHubWebhook(payload: string, signature: string): boolean {
   if (!WEBHOOK_SECRET) {
     console.error('GITHUB_WEBHOOK_SECRET is not set')
@@ -27,48 +24,75 @@ function verifyGitHubWebhook(payload: string, signature: string): boolean {
 }
 
 export async function POST(request: Request) {
+  console.log('GitHub webhook received!', new Date().toISOString());
+  
   try {
-    // Get the signature from the headers
-    const signature = request.headers.get('x-hub-signature-256')
+    const signature = request.headers.get('x-hub-signature-256');
     if (!signature) {
-      return NextResponse.json({ error: 'No signature provided' }, { status: 401 })
+      console.error('❌ No signature provided in webhook');
+      return NextResponse.json({ error: 'No signature provided' }, { status: 401 });
     }
 
-    // Get the webhook payload
-    const payload = await request.text()
+    const payload = await request.text();
     
-    // Verify the signature
+    // Verify signature before processing content
     if (!verifyGitHubWebhook(payload, signature)) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+      console.error('❌ Invalid signature in webhook');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
-
-    // Parse the body and get the event type
-    const body = JSON.parse(payload)
-    const githubEvent = request.headers.get('x-github-event')
-
-    console.log(`Received GitHub webhook event: ${githubEvent}`)
-
-    // Handle different event types
+    
+    let body: any = {};
+    let githubEvent = request.headers.get('x-github-event');
+    
+    try {
+      body = JSON.parse(payload);
+      console.log(`✅ Webhook verified: ${githubEvent}, action: ${body.action || 'none'}`);
+    } catch (parseError) {
+      console.error('❌ Error parsing webhook payload');
+      return NextResponse.json({ error: 'Invalid payload format' }, { status: 400 });
+    }
+    
     switch (githubEvent) {
-      case 'installation':
-        // Handle app installation/uninstallation
-        console.log('App installation event:', body.action)
-        break
+      case 'installation':        
+        if (body.action === 'deleted') {
+          const installationId = body.installation.id.toString();
+          console.log(`🗑️ GitHub App uninstalled from installation ${installationId}`);
+          
+          try {
+            const supabase = await createClient();
+            
+            const { data: affectedRows, error } = await supabase.rpc(
+              'disable_github_connection',
+              { p_installation_id: installationId }
+            );
+            
+            if (error) {
+              console.error('❌ Error calling disable_github_connection');
+            } else {
+              console.log(`✅ Installation ${installationId} uninstalled successfully`);
+              if (affectedRows.updated > 0) {
+                console.log(`   New active connection set for user`);
+              }
+              revalidatePath('/dashboard');
+            }
+          } catch (error) {
+            console.error('❌ Error processing uninstallation');
+          }
+        }
+        break;
         
       case 'push':
-        // Handle push events
-        console.log('Push event to:', body.repository.full_name)
-        break
+        // Log minimal information about the push event
+        console.log('Push event received');
+        break;
         
-      // Add more event handlers as needed
-      
       default:
-        console.log(`Unhandled event type: ${githubEvent}`)
+        console.log(`Received webhook: ${githubEvent}`);
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error processing webhook:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error processing webhook');
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 
