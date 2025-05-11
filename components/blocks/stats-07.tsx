@@ -15,7 +15,7 @@ const data = [
     fill: "var(--chart-1)",
   },
   {
-    name: "Dashboards",
+    name: "Performance",
     capacity: 10,
     current: 2,
     allowed: 20,

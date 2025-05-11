@@ -6,16 +6,16 @@ export async function GET(request: NextRequest) {
   const installationId = url.searchParams.get('installation_id')
   
   if (!installationId) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/performance', request.url))
   }
   
   try {
     const installationData = await getGitHubInstallationData(installationId)
     const account = installationData.data.account
     
-    // TODO: Handle the case where the account is not found insaide dashboard page
+    // TODO: Handle the case where the account is not found insaide performance page
     if (!account) {
-      return NextResponse.redirect(new URL('/dashboard?error=installation_failed', request.url))
+      return NextResponse.redirect(new URL('/performance?error=installation_failed', request.url))
     }
     
     const formData = new FormData()
@@ -28,13 +28,13 @@ export async function GET(request: NextRequest) {
     
     // TODO: Handle the case where the connection is not saved
     if (result.error) {
-      return NextResponse.redirect(new URL(`/dashboard?error=${encodeURIComponent(result.error)}`, request.url))
+      return NextResponse.redirect(new URL(`/performance?error=${encodeURIComponent(result.error)}`, request.url))
     }
     
-    // Redirect to dashboard with success message
-    return NextResponse.redirect(new URL('/dashboard?success=installation_complete', request.url))
+    // Redirect to performance page with success message
+    return NextResponse.redirect(new URL('/performance?success=installation_complete', request.url))
   } catch (error) {
     console.error('Error processing GitHub installation:', error)
-    return NextResponse.redirect(new URL('/dashboard?error=installation_failed', request.url))
+    return NextResponse.redirect(new URL('/performance?error=installation_failed', request.url))
   }
 } 

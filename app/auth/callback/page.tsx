@@ -17,14 +17,14 @@ export default function AuthCallbackPage() {
         if (sessionError) throw sessionError;
         
         if (session) {
-          router.push("/dashboard");
+          router.push("/performance");
         } else {
           const { data, error: exchangeError } = await supabase.auth.getUser();
           
           if (exchangeError) throw exchangeError;
           
           if (data.user) {
-            router.push("/dashboard");
+            router.push("/performance");
           } else {
             setError("Authentication failed. Please try again.");
             setIsLoading(false);

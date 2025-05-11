@@ -88,7 +88,7 @@ export async function POST(request: Request) {
               if (affectedRows.updated > 0) {
                 console.log(`   New active connection set for user`);
               }
-              revalidatePath('/dashboard');
+              revalidatePath('/performance');
             }
           } catch {
             console.error('❌ Error processing uninstallation');

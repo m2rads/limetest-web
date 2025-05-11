@@ -129,7 +129,7 @@ export async function saveGitHubConnection(formData: FormData): Promise<{ succes
       }
     }
     
-    revalidatePath('/dashboard')    
+    revalidatePath('/performance')    
     return { success: 'GitHub connection saved successfully' }
   } catch (error) {
     console.error('Error saving GitHub connection:', error)
@@ -267,7 +267,7 @@ export async function setActiveOrganization(orgId: string): Promise<{success: bo
     }
     
     // Revalidate relevant paths to update UI across the app
-    revalidatePath('/dashboard');
+    revalidatePath('/performance');
     
     return { success: true };
   } catch (error) {

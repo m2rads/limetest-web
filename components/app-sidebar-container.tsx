@@ -5,7 +5,7 @@ import { fetchUserGitHubOrganizations, fetchUserProfileData } from "@/lib/github
 const defaultNavItems: NavItem[] = [
   {
     title: "Performance",
-    url: "#",
+    url: "/performance",
     icon: "dashboard",
   },
   {
