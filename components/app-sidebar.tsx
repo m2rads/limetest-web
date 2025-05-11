@@ -11,7 +11,7 @@ import {
   type Icon
 } from "@tabler/icons-react"
 
-import { NavMain } from "@/components/nav-main"
+import { NavMain, type Organization } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -32,10 +32,9 @@ export type UserData = {
 export type NavItem = {
   title: string
   url: string
-  icon: string  // Icon name as a string
+  icon: string
 }
 
-// Map of icon names to icon components
 export const iconMap: Record<string, Icon> = {
   dashboard: IconDashboard,
   activity: IconActivity,
@@ -47,9 +46,10 @@ export const iconMap: Record<string, Icon> = {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   userData: UserData
   navItems: NavItem[]
+  organizations: Organization[]
 }
 
-export function AppSidebar({ userData, navItems, ...props }: AppSidebarProps) {
+export function AppSidebar({ userData, navItems, organizations, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -72,7 +72,7 @@ export function AppSidebar({ userData, navItems, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navItems} />
+        <NavMain items={navItems} organizations={organizations} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />
