@@ -6,10 +6,17 @@ import { NextResponse, type NextRequest } from 'next/server'
 // consider using a distributed cache like Redis
 const lastRefreshAttempt = {
   timestamp: 0,
-  cooldownMs: 60 * 1000 // Only try refresh once per minute
+  cooldownMs: 60 * 1000
 }
 
 export async function updateSession(request: NextRequest) {
+  // Skip auth for webhook endpoints to allow GitHub to call them
+  if (
+    request.nextUrl.pathname.startsWith('/api/github/webhook')
+  ) {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
