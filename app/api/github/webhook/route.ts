@@ -62,12 +62,12 @@ export async function POST(request: Request) {
             const supabase = await createClient();
             
             const { data: affectedRows, error } = await supabase.rpc(
-              'disable_github_connection',
+              'delete_github_connection',
               { p_installation_id: installationId }
             );
             
             if (error) {
-              console.error('❌ Error calling disable_github_connection');
+              console.error('❌ Error calling delete_github_connection');
             } else {
               console.log(`✅ Installation ${installationId} uninstalled successfully`);
               if (affectedRows.updated > 0) {
