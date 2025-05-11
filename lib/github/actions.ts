@@ -6,7 +6,6 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { loadGitHubPrivateKey } from '@/lib/github/utils'
 
-
 export async function redirectToGitHubAppInstall() {
   const appName = process.env.GITHUB_APP_NAME  
   redirect(`https://github.com/apps/${appName}/installations/new`)

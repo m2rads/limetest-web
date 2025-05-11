@@ -1,26 +1,31 @@
-import fs from 'fs'
-import path from 'path'
-
 /**
- * Load the GitHub App private key from file or environment variable
- * @returns The GitHub App private key
- * @throws Error if private key cannot be loaded
+ * Loads and formats the GitHub private key from environment variables
+ * Handles both direct key content and base64-encoded keys
  */
-export function loadGitHubPrivateKey(): string {
+export function loadGitHubPrivateKey(): string | null {
   try {
-    const privateKeyPath = path.join(process.cwd(), 'github-private-key.pem');
-    const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
-    console.log('GitHub private key loaded from file');
-    return privateKey;
-  } catch (err) {
-    console.log('Could not load GitHub private key from file, trying environment variable');    
-    const privateKeyEnv = process.env.GITHUB_APP_PRIVATE_KEY?.replace(/\\n/g, '\n');
-    
-    if (!privateKeyEnv) {
-      throw new Error('GitHub App private key not found in file or environment variables');
+    const base64Key = process.env.GITHUB_APP_PRIVATE_KEY_BASE64;
+    if (base64Key) {
+      const decodedKey = Buffer.from(base64Key, 'base64').toString('utf-8');
+      if (decodedKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+        return decodedKey;
+      }
+      return `-----BEGIN RSA PRIVATE KEY-----\n${decodedKey}\n-----END RSA PRIVATE KEY-----`;
     }
     
-    console.log('GitHub private key loaded from environment variable');
-    return privateKeyEnv;
+    const rawKey = process.env.GITHUB_APP_PRIVATE_KEY;
+    if (!rawKey) {
+      console.error('GitHub App private key not found in environment variables');
+      return null;
+    }
+    const formattedKey = rawKey.replace(/\\n/g, '\n');
+    if (formattedKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+      return formattedKey;
+    }
+
+    return `-----BEGIN RSA PRIVATE KEY-----\n${formattedKey}\n-----END RSA PRIVATE KEY-----`;
+  } catch (error) {
+    console.error('Error loading GitHub private key:', error);
+    return null;
   }
-}
+} 
