@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { getSiteUrl } from "@/lib/utils";
 import { IconBrandGithub } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button"; // Assuming you have a Button component
 
@@ -11,7 +12,7 @@ export default function Page() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`, // Or your desired redirect path
+        redirectTo: `${getSiteUrl()}/auth/callback`, // Using our utility function
       },
     });
     if (error) {
