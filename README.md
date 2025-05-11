@@ -61,7 +61,15 @@ GITHUB_WEBHOOK_SECRET=your_generated_secret
 https://your-domain.com/api/github/webhook
 ```
 
-For local development, you can use a tool like [ngrok](https://ngrok.com/) to expose your local server to the internet or deploy to Vercel:
+7. Next add the name of your Github app to your `.env.local` file: 
+```
+GITHUB_APP_NAME=lime-test
+```
+
+8. Add lastly, generate a RSA private key from your GitHub app and add it to your root folder as `github-private-key-pem`. 
+This RSA file is required in order to act on behalf of your GitHub app.
+
+For local development and your GIthub App Webhook, you can use a tool like [ngrok](https://ngrok.com/) to expose your local server to the internet or deploy to Vercel:
 
 ```bash
 ngrok http 3000
