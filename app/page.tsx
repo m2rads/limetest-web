@@ -54,7 +54,7 @@ export default function Home() {
           
           {/* Middle - Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
+            {/* <Link 
               href="/product" 
               className="text-foreground/80 hover:text-lime-500 dark:hover:text-lime-400 transition-colors"
             >
@@ -65,7 +65,7 @@ export default function Home() {
               className="text-foreground/80 hover:text-lime-500 dark:hover:text-lime-400 transition-colors"
             >
               Docs
-            </Link>
+            </Link> */}
           </div>
           
           {/* Right - GitHub and Get Started */}
@@ -79,12 +79,12 @@ export default function Home() {
             >
               <IconBrandGithub size={20} />
             </Link>
-            <Link 
+            {/* <Link 
               href="/get-started" 
               className="bg-lime-500 hover:bg-lime-600 dark:bg-lime-600 dark:hover:bg-lime-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
             >
               Get Started
-            </Link>
+            </Link> */}
             <ThemeToggle />
           </div>
         </nav>
@@ -157,12 +157,12 @@ export default function Home() {
         <div 
           className={`transition-all duration-700 delay-450 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
         >
-          <Link 
+          {/* <Link 
             href="/get-started" 
             className="bg-lime-500 hover:bg-lime-600 dark:bg-lime-600 dark:hover:bg-lime-700 text-white px-8 py-3 rounded-lg transition-colors shadow-md text-lg font-medium"
           >
             Get Started
-          </Link>
+          </Link> */}
         </div>
       </main>
 
