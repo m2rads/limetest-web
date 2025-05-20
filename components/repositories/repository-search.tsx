@@ -1,15 +1,13 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import { Check, ChevronsUpDown, Search, Loader2 } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { Avatar } from "@/components/ui/avatar"
 import { fetchRepositories } from "@/lib/github/actions"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useOrgContext } from "@/lib/context/org-context"
 
@@ -36,11 +34,10 @@ export function RepositorySearch({ onSelectRepository }: RepositorySearchProps) 
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const { lastUpdated } = useOrgContext()
 
-  const loadRepositories = useCallback(async (query?: string, pageNum: number = 1, append: boolean = false) => {
+  const loadRepositories = useCallback(async (query?: string, pageNum: number = 1) => {
     if (pageNum === 1) {
       setLoading(true)
     } else {
@@ -79,7 +76,7 @@ export function RepositorySearch({ onSelectRepository }: RepositorySearchProps) 
     setPage(1)
     setRepositories([])
     const timeoutId = setTimeout(() => {
-      loadRepositories(searchQuery, 1)
+      loadRepositories(searchQuery)
     }, 300)
     
     return () => clearTimeout(timeoutId)
@@ -94,7 +91,7 @@ export function RepositorySearch({ onSelectRepository }: RepositorySearchProps) 
           // When the sentinel comes into view, load the next page
           const nextPage = page + 1
           setPage(nextPage)
-          loadRepositories(searchQuery, nextPage, true)
+          loadRepositories(searchQuery, nextPage)
         }
       },
       { threshold: 0.1 }

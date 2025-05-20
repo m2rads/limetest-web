@@ -344,7 +344,11 @@ export async function fetchRepositories(searchQuery?: string) {
     const octokit = await app.getInstallationOctokit(parseInt(activeOrg.installation_id));
     
     // Build query parameters
-    const params: any = {
+    const params: {
+      per_page: number;
+      sort: string;
+      direction: string;
+    } = {
       per_page: 100,
       sort: 'updated',
       direction: 'desc'

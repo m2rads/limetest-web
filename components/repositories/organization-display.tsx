@@ -1,20 +1,19 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Avatar } from "@/components/ui/avatar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useOrgContext } from "@/lib/context/org-context"
 
 export function OrganizationDisplay() {
-  const { activeOrg, isLoading, lastUpdated } = useOrgContext()
+  const { activeOrg, isLoading } = useOrgContext()
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">Active Organization</CardTitle>
-          <CardDescription>The GitHub organization you're currently working with</CardDescription>
+          <CardDescription>The GitHub organization you&apos;re currently working with</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
@@ -49,7 +48,7 @@ export function OrganizationDisplay() {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">Active Organization</CardTitle>
-        <CardDescription>The GitHub organization you're currently working with</CardDescription>
+        <CardDescription>The GitHub organization you&apos;re currently working with</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-3">
