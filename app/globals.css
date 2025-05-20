@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --background: oklch(0.98 0 0);
@@ -160,8 +161,6 @@
 body {
   letter-spacing: var(--tracking-normal);
 }
-
-@custom-variant dark (&:is(.dark *));
 
 /* 
 @layer base {
