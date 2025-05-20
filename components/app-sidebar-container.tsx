@@ -8,11 +8,11 @@ const defaultNavItems: NavItem[] = [
     url: "/performance",
     icon: "dashboard",
   },
-  // {
-  //   title: "Quality",
-  //   url: "#",
-  //   icon: "activity",
-  // },
+  {
+    title: "Runners",
+    url: "/runners",
+    icon: "activity",
+  },
   {
     title: "Reports",
     url: "/reports",

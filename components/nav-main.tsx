@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useTransition, useCallback, useMemo } from "react"
+import { useTransition, useCallback, useMemo } from "react"
 import { IconBrandGithub, IconChevronDown } from "@tabler/icons-react"
 import { iconMap } from "./app-sidebar"
 import { redirectToGitHubAppInstall, setActiveOrganization } from '@/lib/github/actions'
 import { useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
+import { useOrgContext } from '@/lib/context/org-context'
 
 import {
   DropdownMenu,
@@ -41,17 +42,11 @@ export function NavMain({
   }[];
   organizations: Organization[];
 }) {
-  // Find the active organization or default to the first one
-  const activeOrg = useMemo(() => 
-    organizations.find(org => org.is_active) || organizations[0],
-    [organizations]
-  )
-  
-  const [currentOrg, setCurrentOrg] = useState(activeOrg || null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const pathname = usePathname()
-
+  const { activeOrg, refreshOrg, isLoading } = useOrgContext()
+  
   const handleAddOrg = useCallback(() => {
     startTransition(() => {
       redirectToGitHubAppInstall()
@@ -59,16 +54,16 @@ export function NavMain({
   }, [])
 
   const handleSelectOrg = useCallback(async (org: Organization) => {
-    if (org.id === currentOrg?.id) return
+    if (org.id === activeOrg?.id) return
 
     startTransition(async () => {
       try {
-        setCurrentOrg(org)
-        
         if (typeof org.id === 'string') {
           const result = await setActiveOrganization(org.id)
           
           if (result.success) {
+            // Refresh org data in context
+            await refreshOrg()
             router.refresh()
           } else {
             console.error('Failed to update active organization:', result.error)
@@ -78,7 +73,7 @@ export function NavMain({
         console.error('Failed to update active organization:', error)
       }
     })
-  }, [currentOrg, router])
+  }, [activeOrg, router, refreshOrg])
 
   // Prefetch nav item routes for faster navigation
   useMemo(() => {
@@ -104,11 +99,11 @@ export function NavMain({
                     className="bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground active:bg-accent/90 active:text-accent-foreground min-w-8 duration-200 ease-linear justify-between"
                   >
                     <div className="flex items-center gap-2">
-                      {currentOrg?.avatar_url ? (
+                      {activeOrg?.avatar_url ? (
                         <div className="relative w-5 h-5 rounded-full overflow-hidden">
                           <Image 
-                            src={currentOrg.avatar_url} 
-                            alt={currentOrg.name} 
+                            src={activeOrg.avatar_url} 
+                            alt={activeOrg.name} 
                             fill
                             sizes="20px"
                             className="object-cover"
@@ -117,10 +112,10 @@ export function NavMain({
                         </div>
                       ) : (
                         <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
-                          {currentOrg?.name?.charAt(0) || '?'}
+                          {activeOrg?.name?.charAt(0) || '?'}
                         </div>
                       )}
-                      <span>{currentOrg?.name}</span>
+                      <span>{isLoading ? "Loading..." : activeOrg?.name}</span>
                     </div>
                     <IconChevronDown className="h-4 w-4 opacity-70" />
                   </SidebarMenuButton>
@@ -130,7 +125,7 @@ export function NavMain({
                     <DropdownMenuItem 
                       key={org.id} 
                       onClick={() => handleSelectOrg(org)}
-                      className={org.is_active ? "bg-accent/50" : ""}
+                      className={activeOrg?.id === org.id ? "bg-accent/50" : ""}
                     >
                       <div className="flex items-center gap-2">
                         {org.avatar_url ? (

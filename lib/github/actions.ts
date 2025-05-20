@@ -293,7 +293,7 @@ export async function getActiveOrganization() {
     // Get the active organization
     const { data, error } = await supabase
       .from('github_connections')
-      .select('id, github_org_name, github_org_avatar_url')
+      .select('id, github_org_name, github_org_avatar_url, github_installation_id')
       .eq('user_id', user.id)
       .eq('is_active', true)
       .single();
@@ -306,11 +306,76 @@ export async function getActiveOrganization() {
       id: data.id,
       name: data.github_org_name,
       avatar_url: data.github_org_avatar_url,
+      installation_id: data.github_installation_id,
       is_active: true
     };
   } catch (error) {
     console.error('Error getting active organization:', error);
     return null;
+  }
+}
+
+/**
+ * Fetches repositories for the active GitHub organization
+ * @param searchQuery Optional search query to filter repositories
+ * @returns Array of repositories or empty array if none found
+ */
+export async function fetchRepositories(searchQuery?: string) {
+  try {
+    const activeOrg = await getActiveOrganization();
+    
+    if (!activeOrg || !activeOrg.installation_id) {
+      return [];
+    }
+    
+    const appId = process.env.GITHUB_APP_ID;
+    const privateKey = loadGitHubPrivateKey();
+    
+    if (!appId || !privateKey) {
+      console.error('GitHub App credentials not configured properly');
+      return [];
+    }
+    
+    const app = new App({
+      appId,
+      privateKey,
+    });
+    
+    const octokit = await app.getInstallationOctokit(parseInt(activeOrg.installation_id));
+    
+    // Build query parameters
+    const params: any = {
+      per_page: 100,
+      sort: 'updated',
+      direction: 'desc'
+    };
+    
+    // If it's a user account, use different endpoint
+    const { data } = await octokit.request('GET /installation/repositories', params);
+    
+    let repositories = data.repositories || [];
+    
+    // Filter by search query if provided
+    if (searchQuery && searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase().trim();
+      repositories = repositories.filter(repo => 
+        repo.name.toLowerCase().includes(query) || 
+        (repo.description && repo.description.toLowerCase().includes(query))
+      );
+    }
+    
+    return repositories.map(repo => ({
+      id: repo.id,
+      name: repo.name,
+      full_name: repo.full_name,
+      description: repo.description || '',
+      html_url: repo.html_url,
+      private: repo.private,
+      updated_at: repo.updated_at
+    }));
+  } catch (error) {
+    console.error('Error fetching repositories:', error);
+    return [];
   }
 }
 
