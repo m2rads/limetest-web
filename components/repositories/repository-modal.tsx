@@ -46,7 +46,7 @@ export function RepositoryModal() {
           <span>Add Runner</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] overflow-visible">
         <DialogHeader>
           <DialogTitle>Add Runner</DialogTitle>
           <DialogDescription>

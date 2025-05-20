@@ -35,7 +35,22 @@ export function RepositorySearch({ onSelectRepository }: RepositorySearchProps) 
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const { lastUpdated } = useOrgContext()
+
+  // Handle clicks outside the dropdown
+  useEffect(() => {
+    if (!open) return
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [open])
 
   const loadRepositories = useCallback(async (query?: string, pageNum: number = 1) => {
     if (pageNum === 1) {
@@ -116,116 +131,126 @@ export function RepositorySearch({ onSelectRepository }: RepositorySearchProps) 
     setSelectedRepository(repository)
     setOpen(false)
     onSelectRepository(repository)
-    console.log("Selected repository:", repository)
   }
 
+  // Load repositories when Popover opens
+  useEffect(() => {
+    if (open && repositories.length === 0 && !loading) {
+      loadRepositories()
+    }
+  }, [open, repositories.length, loading, loadRepositories])
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 w-full" ref={containerRef}>
       <label htmlFor="repository-search" className="text-sm font-medium">
         Select Repository
       </label>
       
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="justify-between w-full">
-            {selectedRepository ? (
-              <span className="flex items-center gap-2">
-                <span className="font-medium">{selectedRepository.name}</span>
-                {selectedRepository.private && (
-                  <Badge variant="outline" className="ml-2 text-xs">
-                    Private
-                  </Badge>
-                )}
-              </span>
-            ) : (
-              "Select a repository"
-            )}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0">
-          <Command>
-            <CommandInput 
-              placeholder="Search repositories..." 
-              value={searchQuery}
-              onValueChange={setSearchQuery}
-              className="h-9"
-            />
-            <CommandList className="max-h-[300px] overflow-y-auto">
-              <CommandEmpty>
-                {loading ? (
-                  <div className="p-2 flex flex-col gap-2">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                ) : (
-                  "No repositories found. Try broadening your search."
-                )}
-              </CommandEmpty>
-              <CommandGroup>
-                {loading && repositories.length === 0 ? (
-                  <div className="p-2 flex flex-col gap-2">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                ) : (
-                  repositories.map((repo) => (
-                    <CommandItem
-                      key={repo.id}
-                      value={repo.full_name}
-                      onSelect={() => handleSelectRepository(repo)}
-                      className="flex items-start gap-2 py-2"
-                    >
-                      <div className="flex-1 flex flex-col">
-                        <div className="flex items-center">
-                          <span className="font-medium mr-2">{repo.name}</span>
-                          {repo.private && (
-                            <Badge variant="outline" className="ml-auto text-xs">
-                              Private
-                            </Badge>
-                          )}
-                        </div>
-                        {repo.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                            {repo.description}
-                          </p>
-                        )}
-                      </div>
-                      {selectedRepository?.id === repo.id && (
-                        <Check className="h-4 w-4 text-green-500" />
-                      )}
-                    </CommandItem>
-                  ))
-                )}
-
-                {/* Infinite scroll loading indicator */}
-                <div 
-                  ref={loadMoreRef} 
-                  className={cn(
-                    "py-2 text-center",
-                    (!hasMore || repositories.length === 0) && "hidden"
-                  )}
-                >
-                  {loadingMore ? (
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Loading more...</span>
+      <div className="w-full relative">
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="justify-between w-full"
+          onClick={() => setOpen(!open)}>
+          {selectedRepository ? (
+            <span className="flex items-center gap-2">
+              <span className="font-medium">{selectedRepository.name}</span>
+              {selectedRepository.private && (
+                <Badge variant="outline" className="ml-2 text-xs">
+                  Private
+                </Badge>
+              )}
+            </span>
+          ) : (
+            "Select a repository"
+          )}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+        
+        {open && (
+          <div className="absolute left-0 right-0 top-full z-50 mt-1" onClick={(e) => e.stopPropagation()}>
+            <Command className="rounded-lg border shadow-md bg-popover">
+              <CommandInput 
+                placeholder="Search repositories..." 
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+                className="h-9"
+                autoFocus
+              />
+              <CommandList className="max-h-60 overflow-y-auto">
+                <CommandEmpty>
+                  {loading ? (
+                    <div className="p-2 flex flex-col gap-2">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
                     </div>
                   ) : (
-                    <div className="h-4" />
+                    "No repositories found. Try broadening your search."
                   )}
-                </div>
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                </CommandEmpty>
+                <CommandGroup>
+                  {loading && repositories.length === 0 ? (
+                    <div className="p-2 flex flex-col gap-2">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : (
+                    repositories.map((repo) => (
+                      <CommandItem
+                        key={repo.id}
+                        value={repo.full_name}
+                        onSelect={() => handleSelectRepository(repo)}
+                        className="flex items-start gap-2 py-2"
+                      >
+                        <div className="flex-1 flex flex-col">
+                          <div className="flex items-center">
+                            <span className="font-medium mr-2">{repo.name}</span>
+                            {repo.private && (
+                              <Badge variant="outline" className="ml-auto text-xs">
+                                Private
+                              </Badge>
+                            )}
+                          </div>
+                          {repo.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                              {repo.description}
+                            </p>
+                          )}
+                        </div>
+                        {selectedRepository?.id === repo.id && (
+                          <Check className="h-4 w-4 text-green-500" />
+                        )}
+                      </CommandItem>
+                    ))
+                  )}
+
+                  {/* Infinite scroll loading indicator */}
+                  <div 
+                    ref={loadMoreRef} 
+                    className={cn(
+                      "py-2 text-center",
+                      (!hasMore || repositories.length === 0) && "hidden"
+                    )}
+                  >
+                    {loadingMore ? (
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Loading more...</span>
+                      </div>
+                    ) : (
+                      <div className="h-4" />
+                    )}
+                  </div>
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </div>
+        )}
+      </div>
     </div>
   )
 } 
